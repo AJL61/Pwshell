@@ -1,0 +1,69 @@
+Clear-Host
+
+Do {
+# Choix IP dans une boucle
+$IpAddress = Read-Host "Votre adresse IP"
+$Masque = Read-Host "Le masque de sous-réseau : ex: 24"
+$gateway = Read-Host "La paserelle"
+$EnterDNS = Read-Host "Entrer votre DNS"
+$namePC = Read-Host "Le nom du PC"
+
+
+$question = Read-Host "Valider ? (O)ui / (N)on"
+}
+
+While($question -match "n")
+
+
+# Changement de l'ip
+$adaptater = Get-NetAdapter | Select-Object -ExpandProperty name
+
+New-NetIPAddress `
+-InterfaceAlias $adaptater `
+-IPAddress $IpAddress `
+-PrefixLength $Masque `
+-DefaultGateway $gateway
+
+<#
+    Ajout du DNS
+    refactorisation = demander avec un read-host les DNS 
+#>
+
+#$DNS = Read-Host "Mettre les DNS à la suite séparé avec une virgule"
+$DNS = "$EnterDNS, 1.1.1.1, 8.8.8.8"
+
+Set-DnsClientServerAddress `
+-InterfaceAlias $adaptater `
+-ServerAddresses $DNS
+
+
+
+# Rename le computer
+#$namePC = "DC-01"
+Rename-Computer -NewName $namePC
+
+
+
+$path = "C:\Temp\Pwshell\sc2.ps1"
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File $path"
+
+# Creation du déclencheur // faire un condition et recup la langue de la machine pour adapter l'user "ex: Administrator"
+
+# Varibale qui permet d'eviter des erreur si l'utilisateur est en fr ou en en 
+$user = $env:USERNAME
+
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
+
+
+# Enregistrer la task 1
+Register-ScheduledTask `
+    -Action $action `
+    -Trigger $trigger `
+    -TaskName "Demarrage" `
+    -Description "Lancement au demarrage"
+
+
+#Reboot le serveur
+Restart-Computer
+
+ 
