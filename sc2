@@ -1,0 +1,51 @@
+
+#Suppression de la tâche 
+Unregister-ScheduledTask -TaskName "Demarrage" -Confirm:$false
+
+
+
+$path = "C:\Temp\Pwshell\sc3.ps1"
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File $path"
+
+# Creation du déclencheur // faire un condition et recup la langue de la machine pour adapter l'user "ex: Administrator"
+$user = $env:USERNAME
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
+
+# Creation de haut privilege
+# $settings = New-ScheduledTaskSettingsSet -runlevel highest
+
+
+
+# Enregistrer la task 
+Register-ScheduledTask `
+    -Action $action `
+    -Trigger $trigger `
+    -TaskName "Creation_OU" `
+    -Description "Lancement après la mise en place de la forêt"
+
+
+
+
+
+# installation du role
+Install-WindowsFeature `
+    -Name "AD-Domain-Services" `
+    -IncludeManagementTools
+
+
+Install-ADDSForest `
+-DomainName "restname.lan" `
+-CreateDnsDelegation:$false `
+-DatabasePath "C:\Windows\NTDS" `
+-DomainMode "WinThreshold" `
+-DomainNetbiosName "RESTNAME" `
+-ForestMode "WinThreshold" `
+-InstallDns:$true `
+-LogPath "C:\Windows\NTDS" `
+-SysvolPath "C:\Windows\SYSVOL" `
+-Force:$true `
+-SafeModeAdministratorPassword (Read-Host "Entrer le mot de passe du mode sans échec de l'administrateur" -AsSecureString)
+
+
+
+
