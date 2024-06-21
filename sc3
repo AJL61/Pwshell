@@ -1,0 +1,53 @@
+
+#Suppression de la tâche 2
+Unregister-ScheduledTask -TaskName "Creation_OU" -Confirm:$false
+
+
+
+# Installation du module RSAT 
+Install-WindowsFeature -Name RSAT-ADDS
+
+
+#Creation OU
+Import-Module ActiveDirectory
+New-ADOrganizationalUnit -Name "RestName Corporate" -Path "DC=RESTNAME,DC=LAN"
+
+# Creation de l'OU (IT)
+New-ADOrganizationalUnit -Name "IT" -Path "OU=RestName Corporate,DC=RESTNAME,DC=LAN"
+
+
+# Creation de l'utilisateur N3
+
+$UserParam = @{
+    SamAccountName = 'king'
+    UserPrincipalName = "king@restname.lan"
+    Name = "Matt KING"
+    GivenName = "Matt"
+    Surname = "KING"
+    Enabled = $true
+    DisplayName = "Matt KING"
+    Path = "OU=IT,OU=RestName Corporate,DC=RESTNAME,DC=LAN"
+    AccountPassword = (ConvertTo-SecureString '123456+Az' -AsPlainText -Force)
+    ChangePasswordAtLogon = $true
+}
+
+New-ADUser @UserParam
+New-LocalGroup -Name "N3" -Description "Administrateur N3" 
+
+Write-Host "Configuration IP = OK " -ForegroundColor Green
+Write-Host "Renommage du PC = OK " -ForegroundColor Green
+Write-Host "Installation Active Directory = OK " -ForegroundColor Green
+Write-Host "Installation des RSAT ADDS = OK " -ForegroundColor Green
+Write-Host "Importation du module ADDS = OK " -ForegroundColor Green
+Write-Host "Creation OU = OK" -ForegroundColor Green
+Write-Host "Creation de l'utilisateur KING = OK " -ForegroundColor Green
+Write-Host "Creation du groupe N3" -ForegroundColor Green 
+
+
+
+pause
+
+
+<#
+    gerer les sortie d'erreur pour adapter les resultat finale
+#>
